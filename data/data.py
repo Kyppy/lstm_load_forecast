@@ -26,7 +26,7 @@ def clean_raw_data():
     # save cleaned dataset
     dataset.to_csv('cleaned/household_power_consumption.csv')
 
-def generate_training_data(ref_date, duration=1, time_step=60, resample=False,
+def generate_training_data(ref_date, durations=[1], sample_rate=60,
                            path='cleaned/household_power_consumption.csv'):
     if not os.path.isfile(path):
         clean_raw_data()
@@ -37,21 +37,21 @@ def generate_training_data(ref_date, duration=1, time_step=60, resample=False,
     dataset.index = pd.to_datetime(dataset.index)
     dataset.rename(columns={'Global_active_power':'Power'}, inplace=True)
 
-    #determine number of training samples for given training duration
-    training_data_samples = int((86400 * duration)/pd.Timedelta(dataset.index[1]-dataset.index[0]).seconds)
-
-    # TODO add logic to check if returned dataframe is empty
-    training_df=dataset[dataset.index <= datetime.strptime(ref_date, '%d/%m/%y %H:%M:%S')]
-
-    # TODO refactor to 'try-except' logic
-    if len(training_df) > training_data_samples:
-        training_df = training_df[-training_data_samples:]
-    else:
-        training_df = training_df[:]
+    for duration in durations:
+        #determine number of training samples for given training duration
+        time_step = dataset.index[1]-dataset.index[0].seconds
+        training_data_samples = int((86400 * duration)/pd.Timedelta(time_step))
     
-    if resample:
-        training_df.resample("{0}S".format(time_step)).mean()
-    training_df.to_csv("training_data/{0}_day_training_data.csv".format(duration))
-    return training_df
-
-df = generate_training_data('21/02/08 00:00:00')
+        # TODO add logic to check if returned dataframe is empty
+        training_df=dataset[dataset.index <= datetime.strptime(ref_date, '%d/%m/%y %H:%M:%S')]
+    
+        # TODO refactor to 'try-except' logic
+        if len(training_df) > training_data_samples:
+            training_df = training_df[-training_data_samples:]
+        else:
+            training_df = training_df[:]
+        
+        if time_step != sample_rate:
+            training_df.resample("{0}S".format(sample_rate)).mean()
+        training_df.to_csv("training_data/{0}_day_training_data.csv".format(duration))
+    
