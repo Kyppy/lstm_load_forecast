@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import numpy as np
 from numpy import nan
 from numpy import isnan
 from pandas import read_csv
@@ -26,32 +27,71 @@ def clean_raw_data():
     # save cleaned dataset
     dataset.to_csv('cleaned/household_power_consumption.csv')
 
-def generate_training_data(ref_date, durations=[1], sample_rate=60,
+def extract_dataset_features(dataset):
+    # normalise dataset 'Power' column
+    dataset['Power'] = (dataset['Power'] - dataset['Power'].min()) / (dataset['Power'].max() - dataset['Power'].min())
+    # initialise dataframe to contain only training features
+    feature_df = pd.DataFrame({'Power': dataset['Power']})
+    feature_df.index = pd.to_datetime(dataset.index)
+    
+    #conversion constants for time of day,week and year
+    day = 60*60*24
+    week = day * 7
+    year = day * 365.2425
+
+    # numerically encode date-time labels
+    # set column for epoch-seconds
+    feature_df['Epoch Seconds'] = feature_df.index.map(pd.Timestamp.timestamp)
+    # time of day
+    feature_df['Day sin'] = np.sin(feature_df['Epoch Seconds'] * (2 * np.pi / day))
+    feature_df['Day cos'] = np.cos(feature_df['Epoch Seconds'] * (2 * np.pi / day))
+    # time of the week 
+    feature_df['Week sin'] = np.sin(feature_df['Epoch Seconds'] * (2 * np.pi / week))
+    feature_df['Week cos'] = np.cos(feature_df['Epoch Seconds'] * (2 * np.pi / week))
+    # time of the year 
+    feature_df['Year sin'] = np.sin(feature_df['Epoch Seconds'] * (2 * np.pi / year))
+    feature_df['Year cos'] = np.cos(feature_df['Epoch Seconds'] * (2 * np.pi / year))
+    # remove epoch seconds now that mapping is complete
+    feature_df = feature_df.drop('Epoch Seconds', axis=1)
+    return feature_df
+
+def generate_training_data(ref_date, duration=30, sample_rate=1,
                            path='cleaned/household_power_consumption.csv'):
     if not os.path.isfile(path):
         clean_raw_data()
-    
-    #load cleaned dataset
+    # load cleaned dataset
     dataset = read_csv("{0}".format(path), header=0, infer_datetime_format=True, 
                        parse_dates=['datetime'], index_col='datetime')
     dataset.index = pd.to_datetime(dataset.index)
     dataset.rename(columns={'Global_active_power':'Power'}, inplace=True)
 
-    for duration in durations:
-        #determine number of training samples for given training duration
-        time_step = dataset.index[1]-dataset.index[0].seconds
-        training_data_samples = int((86400 * duration)/pd.Timedelta(time_step))
-    
-        # TODO add logic to check if returned dataframe is empty
-        training_df=dataset[dataset.index <= datetime.strptime(ref_date, '%d/%m/%y %H:%M:%S')]
-    
-        # TODO refactor to 'try-except' logic
-        if len(training_df) > training_data_samples:
-            training_df = training_df[-training_data_samples:]
-        else:
-            training_df = training_df[:]
-        
-        if time_step != sample_rate:
-            training_df.resample("{0}S".format(sample_rate)).mean()
-        training_df.to_csv("training_data/{0}_day_training_data.csv".format(duration))
-    
+    # determine number of training samples for given training duration
+    time_step = dataset.index[1]-dataset.index[0].seconds
+    training_data_samples = int((86400 * duration)/pd.Timedelta(time_step))
+    # TODO add logic to check if returned dataframe is empty
+    dataset=dataset[dataset.index <= datetime.strptime(ref_date, '%d/%m/%y %H:%M:%S')]
+    # TODO refactor to 'try-except' logic
+    if len(dataset) > training_data_samples:
+        dataset = dataset[-training_data_samples:]
+    else:
+        dataset = dataset[:]
+    if sample_rate != 1:
+        dataset.resample("{0}S".format(int(sample_rate*60))).mean()
+    dataset.to_csv("training_data/{0}_day_dataset.csv".format(duration))
+    return dataset
+
+def import_dataset(data_path, duration):
+    dataset_df = pd.read_csv("{0}/{1}_day_training_data.csv".format(data_path, duration), 
+                             header=0, infer_datetime_format=True, 
+                             parse_dates=['datetime'], index_col='datetime')
+    dataset_df.index = pd.to_datetime(dataset_df.index)
+    return dataset_df      
+
+def partition_dataset(feature_dataset, test_portion=0.2, train_portion=0.6, 
+                      validation_portion=0.2):
+    test_len =  int(len(feature_dataset) * test_portion)
+    test_data = feature_dataset[-test_len:]
+    train_len = int(len(feature_dataset) * train_portion)
+    training_data = feature_dataset[:train_len]
+    validation_data = feature_dataset[train_len:-test_len]
+    return (training_data, validation_data, test_data)
