@@ -1,3 +1,4 @@
+from assess import model_assessment
 from data import data
 import os
 from train import train_lstm as tl
@@ -39,7 +40,7 @@ model_path= tl.train_lstm(training_dataset, window_size, horizon_length,
                           duration, sample_rate, loss_metric, batch_size, 
                           epochs)
 
-#ASSESS AND PLOT MODEL OUTPUT
-
-
+#ASSESS AND PLOT LSTM MODEL OUTPUT
+error = model_assessment.assess_model(model_path, training_dataset[2], 
+                                      loss_metric, window_size, horizon_length)
     
