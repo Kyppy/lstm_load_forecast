@@ -1,32 +1,11 @@
-import numpy as np
-import pandas as pd
-import math
-import matplotlib.pyplot as plt
-import tensorflow as tf
 from matplotlib.dates import DateFormatter
+from matplotlib.dates import HourLocator
+import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.metrics import mean_absolute_error as mae
-from sklearn.metrics import mean_squared_error as mse
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import load_model
-from matplotlib.dates import HourLocator
-
-def df_to_matrix(df, window_size, horizon_size):
-  df_as_np = df.to_numpy()
-  limit = (len(df_as_np)-(window_size + horizon_size-1))
-  X = []
-  y = []
-  for i in range(limit):
-    row = [r for r in df_as_np[i:i+window_size]]
-    X.append(row)
-    label = df_as_np[i+window_size:i+window_size+horizon_size][:,0]
-    y.append(label)
-  return np.array(X), np.array(y)
-
-def matrix_to_list(feature_matrix):
-    results = feature_matrix[0].tolist()
-    for row in feature_matrix[1:]:
-        results.append(row[-1])
-    return results
+import tensorflow as tf
 
 def assess_model(model_path, test_data, loss_metric, window_size, 
                  horizon_length):
@@ -62,6 +41,22 @@ def assess_model(model_path, test_data, loss_metric, window_size,
     assessment_ax.plot(label_datetimes[:-(horizon_length)], labels[:(len(labels)-horizon_length)])
     assessment_ax.plot(label_datetimes[:-(horizon_length)], predictions[horizon_length:])
     assessment_ax.legend(['Label', 'Predicted'], loc='upper left', fontsize=label_fontsize)
-    
     return prediction_error
     
+def df_to_matrix(df, window_size, horizon_size):
+  df_as_np = df.to_numpy()
+  limit = (len(df_as_np)-(window_size + horizon_size-1))
+  X = []
+  y = []
+  for i in range(limit):
+    row = [r for r in df_as_np[i:i+window_size]]
+    X.append(row)
+    label = df_as_np[i+window_size:i+window_size+horizon_size][:,0]
+    y.append(label)
+  return np.array(X), np.array(y)
+
+def matrix_to_list(feature_matrix):
+    results = feature_matrix[0].tolist()
+    for row in feature_matrix[1:]:
+        results.append(row[-1])
+    return results

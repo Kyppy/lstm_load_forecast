@@ -7,14 +7,6 @@ from pandas import read_csv
 from datetime import datetime
 import os.path
 
-# fill missing values with a value at the same time one day ago
-def fill_missing(values):
-	one_day = 60 * 24
-	for row in range(values.shape[0]):
-		for col in range(values.shape[1]):
-			if isnan(values[row, col]):
-				values[row, col] = values[row - one_day, col]
-                
 def clean_raw_data():
     # load all data
     dataset = read_csv('raw/household_power_consumption.txt', sep=';', header=0, low_memory=False, infer_datetime_format=True, parse_dates={'datetime':[0,1]}, index_col=['datetime'])
@@ -33,12 +25,10 @@ def extract_dataset_features(dataset):
     # initialise dataframe to contain only training features
     feature_df = pd.DataFrame({'Power': dataset['Power']})
     feature_df.index = pd.to_datetime(dataset.index)
-    
-    #conversion constants for time of day,week and year
+    # conversion constants for time of day,week and year
     day = 60*60*24
     week = day * 7
     year = day * 365.2425
-
     # numerically encode date-time labels
     # set column for epoch-seconds
     feature_df['Epoch Seconds'] = feature_df.index.map(pd.Timestamp.timestamp)
@@ -54,8 +44,16 @@ def extract_dataset_features(dataset):
     # remove epoch seconds now that mapping is complete
     feature_df = feature_df.drop('Epoch Seconds', axis=1)
     return feature_df
-
-def generate_training_data(ref_date, duration=30, sample_rate=1,
+    
+def fill_missing(values):
+    # fill missing values with a value at the same time one day ago
+	one_day = 60 * 24
+	for row in range(values.shape[0]):
+		for col in range(values.shape[1]):
+			if isnan(values[row, col]):
+				values[row, col] = values[row - one_day, col]
+                
+def generate_training_data(ref_date, data_length=30, sample_rate=1,
                            path='cleaned/household_power_consumption.csv'):
     if not os.path.isfile(path):
         clean_raw_data()
@@ -64,10 +62,9 @@ def generate_training_data(ref_date, duration=30, sample_rate=1,
                        parse_dates=['datetime'], index_col='datetime')
     dataset.index = pd.to_datetime(dataset.index)
     dataset.rename(columns={'Global_active_power':'Power'}, inplace=True)
-
     # determine number of training samples for given training duration
     time_step = dataset.index[1]-dataset.index[0].seconds
-    training_data_samples = int((86400 * duration)/pd.Timedelta(time_step))
+    training_data_samples = int((86400 * data_length)/pd.Timedelta(time_step))
     # TODO add logic to check if returned dataframe is empty
     dataset=dataset[dataset.index <= datetime.strptime(ref_date, '%d/%m/%y %H:%M:%S')]
     # TODO refactor to 'try-except' logic
@@ -77,11 +74,11 @@ def generate_training_data(ref_date, duration=30, sample_rate=1,
         dataset = dataset[:]
     if sample_rate != 1:
         dataset.resample("{0}S".format(int(sample_rate*60))).mean()
-    dataset.to_csv("training_data/{0}_day_dataset.csv".format(duration))
+    dataset.to_csv("training_data/{0}_day_dataset.csv".format(data_length))
     return dataset
 
-def import_dataset(data_path, duration):
-    dataset_df = pd.read_csv("{0}/{1}_day_training_data.csv".format(data_path, duration), 
+def import_dataset(file_path):
+    dataset_df = pd.read_csv("{0}".format(file_path), 
                              header=0, infer_datetime_format=True, 
                              parse_dates=['datetime'], index_col='datetime')
     dataset_df.index = pd.to_datetime(dataset_df.index)

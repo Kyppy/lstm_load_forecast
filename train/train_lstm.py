@@ -45,7 +45,6 @@ def initialise_lstm(window_size, horizon_length, feature_count, loss_metric,
     model.add(LSTM(neurons, dropout=droput, return_sequences=True))
     model.add(LSTM(neurons, dropout=droput,))
     model.add(Dense(horizon_length))
-    
     if loss_metric == 'mae':
         loss_function = "mean_absolute_error"
     elif loss_metric == 'mse':
@@ -56,10 +55,9 @@ def initialise_lstm(window_size, horizon_length, feature_count, loss_metric,
                   metrics=[loss_metric], run_eagerly=True)
     cp = ModelCheckpoint("{0}/".format(results_path), save_best_only=True) 
     early_stopping = EarlyStopping(monitor='val_loss', patience=patience)
-    
     return model, cp, early_stopping
 
-def train_lstm(training_dataset, window_size, horizon_length, duration, 
+def train_lstm(training_dataset, window_size, horizon_length, data_length, 
                sample_rate, loss_metric, batch_size, epochs, 
                results_path="results/models", metrics_path="results/metrics"):
     # define containers to save training metrics 
@@ -70,13 +68,11 @@ def train_lstm(training_dataset, window_size, horizon_length, duration,
                            "Training Time: {0} Minute Sample Rate".format(sample_rate)]
     error_df = pd.DataFrame(columns=error_column_names)
     timing_df = pd.DataFrame(columns=timing_column_names)
-    
     # create directory to store LSTM models
     model_path = "{0}/{1}/{2}_min_window/{3}_min_horizon/{4}_min_sample_rate/{5}_training_days".format(
-        results_path, loss_metric, window_size, horizon_length, sample_rate, duration)
+        results_path, loss_metric, window_size, horizon_length, sample_rate, data_length)
     if not os.path.exists(model_path):
         os.makedirs(model_path)
-        print("Created {0} directory".format(model_path))
         
     model, cp, early_stopping = initialise_lstm(window_size, horizon_length, 
                                                    len(training_dataset[0].columns), 
@@ -94,15 +90,13 @@ def train_lstm(training_dataset, window_size, horizon_length, duration,
                         validation_data=validation_gen, epochs=epochs, 
                         callbacks=[cp, early_stopping])
     training_end = timer()
-    
     #SAVE TRAINING METRICS
     # export to CSV during loop in case of model training failure
-    error_df.loc[len(error_df.index)] = ["{0}".format(duration), 
+    error_df.loc[len(error_df.index)] = ["{0}".format(data_length), 
                                          history.history[loss_metric][-1],
                                          history.history["val_{0}".format(loss_metric)][-1]]
     error_df.to_csv("{0}/error_metrics.csv".format(metrics_path), index=False)
-    timing_df.loc[len(timing_df.index)] = ["{0}".format(duration), 
+    timing_df.loc[len(timing_df.index)] = ["{0}".format(data_length), 
                                            (training_end-training_start)]
     timing_df.to_csv("{0}/timing_metrics.csv".format(metrics_path), index=False)
-    
     return model_path
