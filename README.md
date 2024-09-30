@@ -20,11 +20,7 @@
   <p align="center">
     A long short-term memory (LSTM) time-series prediction model to forecast residential power consumption. The LSTM models are trained using electrical data measurements from a real home.
     <br />
-    <a href="https://github.com/Kyppy/lstm_load_forecast"><strong>Explore the docs »</strong></a>
     <br />
-    <br />
-    <a href="https://github.com/Kyppy/lstm_load_forecast">View Demo</a>
-    ·
     <a href="https://github.com/Kyppy/lstm_load_forecast/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
     <a href="https://github.com/Kyppy/lstm_load_forecast/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
@@ -50,10 +46,9 @@
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#researchpublications">Research Publications</a></li>
   </ol>
 </details>
 
@@ -109,19 +104,64 @@ To get a local copy of this project running follow these steps.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+### Setting Hyperparameters
+The LSTM hyperparameters can be easily edited by modifying the appropriate variables:
+
+```python
+batch_size = 32
+epochs = 10
+loss_metric = 'mae'
+learning_rate = 0.0001
+horizon_length = 1
+window_size = 60 
+```
+The time units for `horizon_length` and `window_size` are assumed to be in minutes.
+
+### Training Data
+The dataset used to train this model was downloaded from <a href="https://archive.ics.uci.edu/dataset/235/individual+household+electric+power+consumption">here</a>. The dataset consists of minutely measurements over 3 years and 11 months, starting on December 2006 and ending on November 2010. The raw, unzipped, dataset text file is assumed to be stored in the default directory:
+```python
+data/raw/household_power_consumption.txt
+```
+The length of data used for training can be changed by selecting a reference date and modifying the `data_length` variable:
+```python
+# dd/mm/yy hh:mm:ss format
+reference_date = '21/02/08 00:00:00'
+data_length = 30
+```
+The `data_length` units are assumed to be in days. These settings will produce a dataset containing 30 days of measurements preceding the date of 21 Feb 2008.
+Datasets can be generated using the `data.generate_training_data` function:
+```python
+data.generate_training_data(reference_date, data_length, sample_rate)
+```
+Datasets are saved upon successful generation. For repeated dataset settings, the existing/saved dataset is re-used not overwritten.
+
+The time resolution of the generated dataset can be changed (e.g. from minutely to hourly sampling) by modifying the `sample_rate` variable:
+```python
+sample_rate = 60
+```
+The default `sample_rate` is 1 minute. A `sample_rate` of 60 would re-sample the dataset to use hourly time steps. The default unit for `sample_rate` is minutes.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Training, Validation and Test Data
+The generated dataset is partitioned into seperate `train`, `validation` and `test` subsets. The default ratio is 60% train, 20% validation and 20% test. The partition ratio can be changed by modifying the `train_portion`, `validation_portion` and `test_portion` params in the `partition_dataset` function.
+
+### Train LSTM
+The LSTM training is performed using the `train_lstm` function:
+```python
+train_lstm(training_dataset, window_size, horizon_length, data_length, sample_rate, loss_metric, batch_size, epochs)
+```
+
+### Model Assessment
+The `assess_model` function determines the prediction model output error and compares the predicted values to the dataset labels.
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
-
-See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
+- [ ] Add LSTM class for easier model modification
+- [ ] Add `try-except` checks to reduce code fragility
+- [ ] Enable simultaneous, multiple data parameter changes
+- [ ] Add demo mode 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
