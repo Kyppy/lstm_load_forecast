@@ -45,10 +45,10 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#researchpublications">Research Publications</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#researchpublications">Research Publications</a></li>
   </ol>
 </details>
 
@@ -78,7 +78,7 @@ To get a local copy of this project running follow these steps.
   version 3.10.8
   ```
 
-  ### Installation
+### Installation
   
 1. Clone the repo
    ```sh
@@ -106,7 +106,6 @@ To get a local copy of this project running follow these steps.
 
 ### Setting Hyperparameters
 The LSTM hyperparameters can be easily edited by modifying the appropriate variables:
-
 ```python
 batch_size = 32
 epochs = 10
@@ -141,8 +140,6 @@ sample_rate = 60
 ```
 The default `sample_rate` is 1 minute. A `sample_rate` of 60 would re-sample the dataset to use hourly time steps. The default unit for `sample_rate` is minutes.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ### Training, Validation and Test Data
 The generated dataset is partitioned into seperate `train`, `validation` and `test` subsets. The default ratio is 60% train, 20% validation and 20% test. The partition ratio can be changed by modifying the `train_portion`, `validation_portion` and `test_portion` params in the `partition_dataset` function.
 
@@ -154,6 +151,22 @@ train_lstm(training_dataset, window_size, horizon_length, data_length, sample_ra
 
 ### Model Assessment
 The `assess_model` function determines the prediction model output error and compares the predicted values to the dataset labels.
+The assessment output includes a figure similar to the following:
+![alt text][sample_assessment]
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- RESEARCH PUBLICATIONS -->
+## Research Publications
+
+The following peer-reviewed research papers were published with findings produced using code from this project.
+
+* [“Using LSTM To Perform Load Modelling For Residential
+Demand Side Management”](https://ieeexplore.ieee.org/document/10057875)
+* [“Using LSTM To Perform Load Predictions For Grid-
+Interactive Buildings”](https://www.researchgate.net/publication/381076004_Using_LSTM_to_Perform_Load_Predictions_for_Grid-Interactive_Buildings)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -181,18 +194,6 @@ Project Link: [https://github.com/Kyppy/lstm_load_forecast](https://github.com/K
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- RESEARCH PUBLICATIONS -->
-## Research Publications
-
-The following peer-reviewed research papers were published with findings produced using code from this project.
-
-* [“Using LSTM To Perform Load Modelling For Residential
-Demand Side Management”](https://ieeexplore.ieee.org/document/10057875)
-* [“Using LSTM To Perform Load Predictions For Grid-
-Interactive Buildings”](https://www.researchgate.net/publication/381076004_Using_LSTM_to_Perform_Load_Predictions_for_Grid-Interactive_Buildings)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [KR]: https://img.shields.io/badge/Keras-%23D00000.svg?style=for-the-badge&logo=Keras&logoColor=white
@@ -201,5 +202,6 @@ Interactive Buildings”](https://www.researchgate.net/publication/381076004_Usi
 [license-url]: https://github.com/Kyppy/lstm_load_forecast/blob/main/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/kyppysimani
+[sample_assessment]: https://github.com/Kyppy/lstm_load_forecast/main/images/samples_assessment.png "Sample predicted vs label power"
 [TF]: https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white
 [TF-url]: https://www.tensorflow.org/
