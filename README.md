@@ -151,7 +151,7 @@ train_lstm(training_dataset, window_size, horizon_length, data_length, sample_ra
 
 ### Model Assessment
 The `assess_model` function determines the prediction model output error and compares the predicted values to the dataset labels.
-The assessment output includes a figure similar to the following:
+The assessment produces a figure similar to the following:
 ![alt text][sample_assessment]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -202,6 +202,6 @@ Project Link: [https://github.com/Kyppy/lstm_load_forecast](https://github.com/K
 [license-url]: https://github.com/Kyppy/lstm_load_forecast/blob/main/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/kyppysimani
-[sample_assessment]: https://github.com/Kyppy/lstm_load_forecast/main/images/samples_assessment.png "Sample predicted vs label power"
+[sample_assessment]: https://github.com/Kyppy/lstm_load_forecast/blob/main/images/sample_assessment.png "Sample predicted vs label power"
 [TF]: https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white
 [TF-url]: https://www.tensorflow.org/
